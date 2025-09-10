@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chấm điểm LLM + Rule</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
+        textarea { width: 100%; height: 100px; margin: 5px 0; }
+        input[type="number"] { margin: 5px 0; }
+        button { padding: 10px 15px; margin-top: 10px; }
+        pre { background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h2>Chấm điểm bài làm</h2>
+    
+    <label for="question">Câu hỏi:</label>
+    <textarea id="question" placeholder="Nhập câu hỏi..."></textarea>
+
+    <label for="answer">Bài làm của học sinh:</label>
+    <textarea id="answer" placeholder="Nhập câu trả lời..."></textarea>
+
+    <label for="maxScore">Điểm tối đa:</label>
+    <input type="number" id="maxScore" value="10" min="1" style="width: 60px;">
+
+    <br>
+    <button onclick="gradeAnswer()">Chấm điểm</button>
+
+    <div id="result" style="margin-top:20px;"></div>
+
+    <script>
+        async function gradeAnswer() {
+            const question = document.getElementById("question").value.trim();
+            const answer = document.getElementById("answer").value.trim();
+            let maxScore = parseInt(document.getElementById("maxScore").value, 10);
+
+            if (!maxScore || maxScore <= 0) maxScore = 10; // mặc định 10 điểm nếu không nhập
+
+            if (!question || !answer) {
+                alert("Vui lòng nhập cả câu hỏi và câu trả lời!");
+                return;
+            }
+
+            const res = await fetch("/score", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ question: question, answer: answer, max_score: maxScore })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("result").innerHTML = `
+                <p><strong>Tổng điểm:</strong> ${data.total_score} / ${maxScore}</p>
+                <p><strong>Giải thích:</strong></p>
+                <pre>${data.rag_explanation}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>
